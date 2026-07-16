@@ -428,13 +428,27 @@ if export_df.empty:
 
 today_str = date.today().strftime("%Y%m%d")
 
+new_batch_xlsx_buffer = io.BytesIO()
+with pd.ExcelWriter(new_batch_xlsx_buffer, engine="openpyxl") as writer:
+    export_df.to_excel(writer, index=False, sheet_name="NUTRI_LONG")
+
 new_batch_csv = export_df.to_csv(index=False).encode("utf-8-sig")
-st.download_button(
-    "⬇️ Descargar jugadores seleccionados (CSV, formato NUTRI_LONG)",
-    data=new_batch_csv,
-    file_name=f"nutri_long_nuevo_{today_str}.csv",
-    mime="text/csv",
-)
+
+ecol1, ecol2 = st.columns(2)
+with ecol1:
+    st.download_button(
+        "⬇️ Descargar jugadores seleccionados (Excel)",
+        data=new_batch_xlsx_buffer.getvalue(),
+        file_name=f"nutri_long_nuevo_{today_str}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+with ecol2:
+    st.download_button(
+        "⬇️ Descargar jugadores seleccionados (CSV)",
+        data=new_batch_csv,
+        file_name=f"nutri_long_nuevo_{today_str}.csv",
+        mime="text/csv",
+    )
 
 if existing_db_file is not None:
     try:
@@ -457,22 +471,26 @@ if existing_db_file is not None:
         )
 
         merged_csv = merged.to_csv(index=False).encode("utf-8-sig")
-        st.download_button(
-            "⬇️ Descargar base NUTRI_LONG actualizada (CSV)",
-            data=merged_csv,
-            file_name=f"NUTRI_LONG_actualizado_{today_str}.csv",
-            mime="text/csv",
-        )
 
         xlsx_buffer = io.BytesIO()
         with pd.ExcelWriter(xlsx_buffer, engine="openpyxl") as writer:
             merged.to_excel(writer, index=False, sheet_name="NUTRI_LONG")
-        st.download_button(
-            "⬇️ Descargar base NUTRI_LONG actualizada (Excel)",
-            data=xlsx_buffer.getvalue(),
-            file_name=f"NUTRI_LONG_actualizado_{today_str}.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        )
+
+        mcol1, mcol2 = st.columns(2)
+        with mcol1:
+            st.download_button(
+                "⬇️ Descargar base NUTRI_LONG actualizada (Excel)",
+                data=xlsx_buffer.getvalue(),
+                file_name=f"NUTRI_LONG_actualizado_{today_str}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        with mcol2:
+            st.download_button(
+                "⬇️ Descargar base NUTRI_LONG actualizada (CSV)",
+                data=merged_csv,
+                file_name=f"NUTRI_LONG_actualizado_{today_str}.csv",
+                mime="text/csv",
+            )
     except Exception as exc:
         st.error(f"No pude leer la base de datos existente: {exc}")
 
